@@ -1,14 +1,70 @@
-# common_button_widget
+Usage sample:
 
-A new Flutter package.
+import 'package:flutter/material.dart';
 
-## Getting Started
+import 'package:flutter/gestures.dart';
+import 'package:flutter/widgets.dart';
 
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
+void main() => runApp(MyApp());
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool sim = false;
+  ButtonState acutalState = ButtonState.INITIAL_STATE;
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              title: Text("Button Test"),
+            ),
+            backgroundColor: Colors.white,
+            body: Column(
+              children: <Widget>[
+                FlatButton(
+                  child: Text('End'),
+                  onPressed: () {
+                    setState(() {
+                      acutalState = ButtonState.END_LOADING_STATE;
+                    });
+                  },
+                ),
+                FlatButton(
+                  child: Text('Initial'),
+                  onPressed: () {
+                    setState(() {
+                      acutalState = ButtonState.INITIAL_STATE;
+                    });
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Center(
+                    child: CommonButton(
+                      onTap: () {
+                        setState(() {
+                          acutalState = ButtonState.START_LOADING_STATE;
+                        });
+                      },
+                      buttonText: 'Teste',
+                      buttonColor: Colors.white,
+                      loadingAnimation: true,
+                      buttonState: acutalState,
+                      animationDuration: Duration(milliseconds: 600),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      border: Border.all(color: Colors.blue, width: 1),
+                    ),
+                  ),
+                ),
+              ],
+            )));
+  }
+}

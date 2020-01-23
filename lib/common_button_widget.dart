@@ -24,42 +24,46 @@ class CommonButton extends StatefulWidget {
   final FontStyle buttonTextFontStyle;
   final FontWeight buttonTextFontWeight;
   final EdgeInsets buttonPadding;
+  final ButtonState buttonState;
 
-  CommonButton(
-      {@required this.onTap,
-        @required this.buttonText,
-        @required this.buttonColor,
-        this.buttonTextStyle,
-        this.height = 50,
-        this.loadingAnimation = false,
-        this.pressedButtonColor,
-        this.borderRadius,
-        this.border,
-        this.animationDuration,
-        this.buttonIcon,
-        this.iconColor,
-        this.textColor,
-        this.pressedIconColor,
-        this.pressedTextColor,
-        this.buttonTextFontSize,
-        this.buttonTextFontStyle,
-        this.buttonTextFontWeight,
-        this.buttonPadding,
-        this.buttonMaxLines = 1,
-        this.loadingColor});
+  CommonButton({
+    @required this.onTap,
+    @required this.buttonText,
+    @required this.buttonColor,
+    this.buttonTextStyle,
+    this.height = 50,
+    this.loadingAnimation = false,
+    this.pressedButtonColor,
+    this.borderRadius,
+    this.border,
+    this.animationDuration,
+    this.buttonIcon,
+    this.iconColor,
+    this.textColor,
+    this.pressedIconColor,
+    this.pressedTextColor,
+    this.buttonTextFontSize,
+    this.buttonTextFontStyle,
+    this.buttonTextFontWeight,
+    this.buttonPadding,
+    this.buttonMaxLines = 1,
+    this.loadingColor,
+    this.buttonState = ButtonState.INITIAL_STATE,
+  });
 
   @override
   _CommonButtonState createState() => _CommonButtonState();
 }
 
-enum ButtonState { INITIAL_STATE, START_LOADING_STATE, END_LOADING_STATE }
+enum ButtonState {
+  INITIAL_STATE,
+  START_LOADING_STATE,
+  END_LOADING_STATE,
+}
 
 class _CommonButtonState extends State<CommonButton>
     with TickerProviderStateMixin {
-  AnimationController _animationController;
-
   BorderRadius get _borderRadius => widget.borderRadius;
-  BorderRadius _borderRadiusForLoading;
 
   bool get _loadingAnimation => widget.loadingAnimation;
 
@@ -68,7 +72,6 @@ class _CommonButtonState extends State<CommonButton>
   Function get _onTap => widget.onTap;
 
   double get _height => widget.height;
-  double _progressWidth;
 
   Icon get _buttonIcon => widget.buttonIcon;
 
@@ -100,51 +103,40 @@ class _CommonButtonState extends State<CommonButton>
 
   int get _buttonMaxLines => widget.buttonMaxLines;
 
-  ButtonState _buttonState;
+  ButtonState get _buttonState => widget.buttonState;
+
+  AnimationController _animationController;
+  BorderRadius _borderRadiusForLoading;
+  double _progressWidth;
   Color _actualButtonColor;
   Color _actualIconColor;
   Color _actualTextColor;
+  bool _alreadyPressed;
 
   GlobalKey _globalKey = GlobalKey();
 
   @override
   void initState() {
-    _buttonState = ButtonState.INITIAL_STATE;
+    _handleAnimations();
     _actualButtonColor = _buttonColor;
     _actualIconColor = _iconColor != null ? _iconColor : Colors.black;
     _actualTextColor = _textColor != null ? _textColor : Colors.black;
-    _animationController =
-        AnimationController(vsync: this, duration: _animationDuration);
-    _animationController.addListener(() {
-      double controllerValue = _animationController.value;
-      double _animHeight = _height * controllerValue;
-      double _auxWidth = MediaQuery.of(context).size.width -
-          (MediaQuery.of(context).size.width * controllerValue);
-      if (controllerValue < 0.9) {
-        setState(() {
-          _borderRadiusForLoading = BorderRadius.circular(_animHeight);
-          _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
-        });
-      } else if (controllerValue == 1.0) {
-        setState(() {
-          _borderRadiusForLoading = BorderRadius.circular(_height);
-        });
-      }
-    });
+    _alreadyPressed = false;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    _handleAnimations();
     return GestureDetector(
         key: _globalKey,
         onTap: () {
           setState(() {
+            print(_buttonState);
             _onTap();
-            if (_loadingAnimation) {
-              _buttonState = ButtonState.START_LOADING_STATE;
-              _animationController.forward();
-            }
+            if(_loadingAnimation == true &&
+            _buttonState == ButtonState.INITIAL_STATE)
+                _animationController.forward();
           });
         },
         onTapDown: (details) {
@@ -186,14 +178,16 @@ class _CommonButtonState extends State<CommonButton>
         },
         child: Container(
           padding: (_buttonPadding != null) ? _buttonPadding : null,
-          decoration: (_buttonState != ButtonState.START_LOADING_STATE)
-              ? _setBoxDecoration()
-              : _setBoxDecorationForLoadingView(),
+          decoration: (_buttonState == ButtonState.START_LOADING_STATE)
+              ? _setBoxDecorationForLoadingView()
+              : _setBoxDecoration(),
           height: _height,
-          width: (_buttonState == ButtonState.INITIAL_STATE)
-              ? MediaQuery.of(context).size.width
+          width: (_buttonState == ButtonState.INITIAL_STATE ||
+                  _buttonState == ButtonState.END_LOADING_STATE)
+              ? _progressWidth
               : _progressWidth,
-          child: (_buttonState == ButtonState.INITIAL_STATE)
+          child: (_buttonState == ButtonState.INITIAL_STATE ||
+                  _buttonState == ButtonState.END_LOADING_STATE)
               ? _setButtonContent()
               : _loadingView(),
         ));
@@ -218,28 +212,28 @@ class _CommonButtonState extends State<CommonButton>
       color: _actualButtonColor);
 
   _setButtonContent() => AnimatedContainer(
-    duration: _animationDuration,
-    width: MediaQuery.of(context).size.width,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        (_buttonIcon != null) ? _getButtonIcon() : Container(),
-        _getButtonText()
-      ],
-    ),
-  );
+        duration: _animationDuration,
+        width: MediaQuery.of(context).size.width,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            (_buttonIcon != null) ? _getButtonIcon() : Container(),
+            _getButtonText()
+          ],
+        ),
+      );
 
   _loadingView() => Container(
-    padding: EdgeInsets.all(8),
-    height: _height,
-    width: _height,
-    child: Center(
-        child: CircularProgressIndicator(
+        padding: EdgeInsets.all(8),
+        height: _height,
+        width: _height,
+        child: Center(
+            child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
               (_loadingColor != null) ? _loadingColor : Colors.blue),
         )),
-  );
+      );
 
   _setBoxDecorationForLoadingView() => BoxDecoration(
       border: _border,
@@ -248,42 +242,90 @@ class _CommonButtonState extends State<CommonButton>
       borderRadius: _borderRadiusForLoading);
 
   _getButtonIcon() => Container(
-    margin: EdgeInsets.only(left: 16),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Icon(
-          _buttonIcon.icon,
-          color: _actualIconColor,
+        margin: EdgeInsets.only(left: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              _buttonIcon.icon,
+              color: _actualIconColor,
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   _getButtonText() => Expanded(
-    child: Container(
-      margin: EdgeInsets.only(right: 16, left: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(_buttonText,
-              maxLines: _buttonMaxLines,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  color: _actualTextColor,
-                  fontWeight: (_buttonTextFontWeight != null)
-                      ? _buttonTextFontWeight
-                      : null,
-                  fontStyle: (_buttonTextFontStyle != null)
-                      ? _buttonTextFontStyle
-                      : null,
-                  fontSize: (_buttonTextFontSize != null)
-                      ? _buttonTextFontSize
-                      : null))
-        ],
-      ),
-    ),
-  );
+        child: Container(
+          margin: EdgeInsets.only(right: 16, left: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(_buttonText,
+                  maxLines: _buttonMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: _actualTextColor,
+                      fontWeight: (_buttonTextFontWeight != null)
+                          ? _buttonTextFontWeight
+                          : null,
+                      fontStyle: (_buttonTextFontStyle != null)
+                          ? _buttonTextFontStyle
+                          : null,
+                      fontSize: (_buttonTextFontSize != null)
+                          ? _buttonTextFontSize
+                          : null))
+            ],
+          ),
+        ),
+      );
+
+  void _handleAnimations() {
+    if (_buttonState == ButtonState.INITIAL_STATE && _alreadyPressed == false) {
+      _animationController =
+          AnimationController(vsync: this, duration: _animationDuration);
+      _animationController.addListener(() {
+        double controllerValue = _animationController.value;
+        double _animHeight = _height * controllerValue;
+        double _auxWidth = MediaQuery.of(context).size.width -
+            (MediaQuery.of(context).size.width * controllerValue);
+        if (controllerValue < 0.9) {
+          setState(() {
+            _borderRadiusForLoading = BorderRadius.circular(_animHeight);
+            _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
+          });
+        } else if (controllerValue == 1.0) {
+          setState(() {
+            _borderRadiusForLoading = BorderRadius.circular(_height);
+            _alreadyPressed = true;
+            print('Initial: $_buttonState');
+          });
+        }
+      });
+    } else if (_buttonState == ButtonState.START_LOADING_STATE && _alreadyPressed == true) {
+      _animationController =
+          AnimationController(vsync: this, duration: _animationDuration);
+      _animationController.addListener(() {
+        double controllerValue = _animationController.value;
+        double _animHeight = _height - (40 * controllerValue);
+        double _auxWidth = MediaQuery.of(context).size.width * controllerValue;
+        if (controllerValue < 0.9) {
+          setState(() {
+            _borderRadiusForLoading = BorderRadius.circular(_animHeight);
+            _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
+          });
+        } else if (controllerValue == 1.0) {
+          setState(() {
+            _borderRadiusForLoading = BorderRadius.circular(10);
+            _alreadyPressed = false;
+            print('StartLoading $_buttonState');
+          });
+        }
+      });
+      _animationController.forward();
+    } else if (_buttonState == ButtonState.END_LOADING_STATE && _alreadyPressed == false) {
+      _animationController.forward();
+    }
+  }
 }

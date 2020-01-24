@@ -25,6 +25,7 @@ class CommonButton extends StatefulWidget {
   final FontWeight buttonTextFontWeight;
   final EdgeInsets buttonPadding;
   final ButtonState buttonState;
+  final bool showOnlyCircleProgressBarOnClick;
 
   CommonButton({
     @required this.onTap,
@@ -48,6 +49,7 @@ class CommonButton extends StatefulWidget {
     this.buttonPadding,
     this.buttonMaxLines = 1,
     this.loadingColor,
+    this.showOnlyCircleProgressBarOnClick = false,
     this.buttonState = ButtonState.INITIAL_STATE,
   });
 
@@ -66,6 +68,9 @@ class _CommonButtonState extends State<CommonButton>
   BorderRadius get _borderRadius => widget.borderRadius;
 
   bool get _loadingAnimation => widget.loadingAnimation;
+
+  bool get _showOnlyCircleProgressBarOnClick =>
+      widget.showOnlyCircleProgressBarOnClick;
 
   Border get _border => widget.border;
 
@@ -134,9 +139,10 @@ class _CommonButtonState extends State<CommonButton>
           setState(() {
             print(_buttonState);
             _onTap();
-            if(_loadingAnimation == true &&
-            _buttonState == ButtonState.INITIAL_STATE)
-                _animationController.forward();
+            if (_loadingAnimation == true &&
+                _buttonState == ButtonState.INITIAL_STATE &&
+                _showOnlyCircleProgressBarOnClick == false)
+              _animationController.forward();
           });
         },
         onTapDown: (details) {
@@ -182,10 +188,9 @@ class _CommonButtonState extends State<CommonButton>
               ? _setBoxDecorationForLoadingView()
               : _setBoxDecoration(),
           height: _height,
-          width: (_buttonState == ButtonState.INITIAL_STATE ||
-                  _buttonState == ButtonState.END_LOADING_STATE)
+          width: (_showOnlyCircleProgressBarOnClick == false)
               ? _progressWidth
-              : _progressWidth,
+              : double.infinity,
           child: (_buttonState == ButtonState.INITIAL_STATE ||
                   _buttonState == ButtonState.END_LOADING_STATE)
               ? _setButtonContent()
@@ -282,50 +287,59 @@ class _CommonButtonState extends State<CommonButton>
       );
 
   void _handleAnimations() {
-    if (_buttonState == ButtonState.INITIAL_STATE && _alreadyPressed == false) {
-      _animationController =
-          AnimationController(vsync: this, duration: _animationDuration);
-      _animationController.addListener(() {
-        double controllerValue = _animationController.value;
-        double _animHeight = _height * controllerValue;
-        double _auxWidth = MediaQuery.of(context).size.width -
-            (MediaQuery.of(context).size.width * controllerValue);
-        if (controllerValue < 0.9) {
-          setState(() {
-            _borderRadiusForLoading = BorderRadius.circular(_animHeight);
-            _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
-          });
-        } else if (controllerValue == 1.0) {
-          setState(() {
-            _borderRadiusForLoading = BorderRadius.circular(_height);
-            _alreadyPressed = true;
-            print('Initial: $_buttonState');
-          });
-        }
-      });
-    } else if (_buttonState == ButtonState.START_LOADING_STATE && _alreadyPressed == true) {
-      _animationController =
-          AnimationController(vsync: this, duration: _animationDuration);
-      _animationController.addListener(() {
-        double controllerValue = _animationController.value;
-        double _animHeight = _height - (40 * controllerValue);
-        double _auxWidth = MediaQuery.of(context).size.width * controllerValue;
-        if (controllerValue < 0.9) {
-          setState(() {
-            _borderRadiusForLoading = BorderRadius.circular(_animHeight);
-            _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
-          });
-        } else if (controllerValue == 1.0) {
-          setState(() {
-            _borderRadiusForLoading = BorderRadius.circular(10);
-            _alreadyPressed = false;
-            print('StartLoading $_buttonState');
-          });
-        }
-      });
-      _animationController.forward();
-    } else if (_buttonState == ButtonState.END_LOADING_STATE && _alreadyPressed == false) {
-      _animationController.forward();
+    if (!_showOnlyCircleProgressBarOnClick) {
+      if (_buttonState == ButtonState.INITIAL_STATE &&
+          _alreadyPressed == false) {
+        _animationController =
+            AnimationController(vsync: this, duration: _animationDuration);
+        _animationController.addListener(() {
+          double controllerValue = _animationController.value;
+          double _animHeight = _height * controllerValue;
+          double _auxWidth = MediaQuery.of(context).size.width -
+              (MediaQuery.of(context).size.width * controllerValue);
+          if (controllerValue < 0.9) {
+            setState(() {
+              _borderRadiusForLoading = BorderRadius.circular(_animHeight);
+              _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
+            });
+          } else if (controllerValue == 1.0) {
+            setState(() {
+              _borderRadiusForLoading = BorderRadius.circular(_height);
+              _alreadyPressed = true;
+              print('Initial: $_buttonState');
+            });
+          }
+        });
+      } else if (_buttonState == ButtonState.START_LOADING_STATE &&
+          _alreadyPressed == true) {
+        _animationController =
+            AnimationController(vsync: this, duration: _animationDuration);
+        _animationController.addListener(() {
+          double controllerValue = _animationController.value;
+          double _animHeight = _height - (40 * controllerValue);
+          double _auxWidth =
+              MediaQuery.of(context).size.width * controllerValue;
+          if (controllerValue < 0.9) {
+            setState(() {
+              _borderRadiusForLoading = BorderRadius.circular(_animHeight);
+              _progressWidth = _auxWidth <= _height ? _height : _auxWidth;
+            });
+          } else if (controllerValue == 1.0) {
+            setState(() {
+              _borderRadiusForLoading = BorderRadius.circular(10);
+              _alreadyPressed = false;
+              print('StartLoading $_buttonState');
+            });
+          }
+        });
+        if (_showOnlyCircleProgressBarOnClick == false)
+          _animationController.forward();
+      } else if (_buttonState == ButtonState.END_LOADING_STATE &&
+          _alreadyPressed == false) {
+        _animationController.forward();
+      }
+    } else{
+      _borderRadiusForLoading = _borderRadius;
     }
   }
 }

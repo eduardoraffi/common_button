@@ -37,7 +37,7 @@ class CommonButton extends StatefulWidget {
     this.pressedButtonColor,
     this.borderRadius,
     this.border,
-    this.animationDuration,
+    this.animationDuration = const Duration(seconds: 1),
     this.buttonIcon,
     this.iconColor,
     this.textColor,

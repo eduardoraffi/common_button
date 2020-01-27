@@ -146,7 +146,6 @@ class _CommonButtonState extends State<CommonButton>
         onTap: () {
           setState(() {
             _onTap();
-            if (_pressedButtonColor != null) _updateColors(true);
             if (_loadingAnimation == true &&
                 _buttonState == ButtonState.INITIAL_STATE &&
                 _showOnlyCircleProgressBarOnClick == false)

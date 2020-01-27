@@ -5,13 +5,14 @@ import 'package:flutter/widgets.dart';
 class CommonButton extends StatefulWidget {
   final double height;
   final int buttonMaxLines;
+  final double iconSize;
   final String buttonText;
   final TextStyle buttonTextStyle;
   final bool loadingAnimation;
   final Border border;
   final BorderRadius borderRadius;
   final Icon buttonIcon;
-  final ImageIcon buttonImageIcon;
+  final AssetImage buttonImageAsset;
   final Function onTap;
   final Duration animationDuration;
   final Color buttonColor;
@@ -34,13 +35,14 @@ class CommonButton extends StatefulWidget {
     @required this.buttonColor,
     this.buttonTextStyle,
     this.height = 50,
+    this.iconSize = 24,
     this.loadingAnimation = false,
     this.pressedButtonColor,
     this.borderRadius,
     this.border,
     this.animationDuration = const Duration(seconds: 1),
     this.buttonIcon,
-    this.buttonImageIcon,
+    this.buttonImageAsset,
     this.iconColor,
     this.textColor,
     this.pressedIconColor,
@@ -82,7 +84,7 @@ class _CommonButtonState extends State<CommonButton>
 
   Icon get _buttonIcon => widget.buttonIcon;
 
-  ImageIcon get _buttonImageIcon => widget.buttonImageIcon;
+  AssetImage get _buttonImageAsset => widget.buttonImageAsset;
 
   String get _buttonText => widget.buttonText;
 
@@ -111,6 +113,8 @@ class _CommonButtonState extends State<CommonButton>
   EdgeInsets get _buttonPadding => widget.buttonPadding;
 
   int get _buttonMaxLines => widget.buttonMaxLines;
+
+  double get _iconSize => widget.iconSize;
 
   ButtonState get _buttonState => widget.buttonState;
 
@@ -227,7 +231,7 @@ class _CommonButtonState extends State<CommonButton>
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            (_buttonIcon != null || _buttonImageIcon != null)
+            (_buttonIcon != null || _buttonImageAsset != null)
                 ? _getButtonIcon()
                 : Container(),
             _getButtonText()
@@ -262,8 +266,13 @@ class _CommonButtonState extends State<CommonButton>
                 ? Icon(
                     _buttonIcon.icon,
                     color: _actualIconColor,
+                    size: _iconSize,
                   )
-                : _buttonImageIcon
+                : ImageIcon(
+                    _buttonImageAsset,
+                    color: _actualIconColor,
+                    size: _iconSize,
+                  )
           ],
         ),
       );
@@ -274,7 +283,7 @@ class _CommonButtonState extends State<CommonButton>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment:
-                (_buttonIcon != null || _buttonImageIcon != null)
+                (_buttonIcon != null || _buttonImageAsset != null)
                     ? CrossAxisAlignment.start
                     : CrossAxisAlignment.center,
             children: [

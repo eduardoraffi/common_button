@@ -142,6 +142,7 @@ class _CommonButtonState extends State<CommonButton>
         onTap: () {
           setState(() {
             _onTap();
+            if (_pressedButtonColor != null) _updateColors(true);
             if (_loadingAnimation == true &&
                 _buttonState == ButtonState.INITIAL_STATE &&
                 _showOnlyCircleProgressBarOnClick == false)
@@ -262,11 +263,7 @@ class _CommonButtonState extends State<CommonButton>
                     _buttonIcon.icon,
                     color: _actualIconColor,
                   )
-                : Image(
-                    image: AssetImage('images/logo.png'),
-                    width: 32,
-                    height: 32,
-                  ),
+                : _buttonImageIcon
           ],
         ),
       );
@@ -320,6 +317,7 @@ class _CommonButtonState extends State<CommonButton>
             setState(() {
               _borderRadiusForLoading = BorderRadius.circular(_height);
               _alreadyPressed = true;
+              print('Initial: $_buttonState');
             });
           }
         });
@@ -341,6 +339,7 @@ class _CommonButtonState extends State<CommonButton>
             setState(() {
               _borderRadiusForLoading = BorderRadius.circular(10);
               _alreadyPressed = false;
+              print('StartLoading $_buttonState');
             });
           }
         });

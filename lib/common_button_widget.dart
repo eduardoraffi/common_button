@@ -11,6 +11,7 @@ class CommonButton extends StatefulWidget {
   final Border border;
   final BorderRadius borderRadius;
   final Icon buttonIcon;
+  final ImageIcon buttonImageIcon;
   final Function onTap;
   final Duration animationDuration;
   final Color buttonColor;
@@ -39,6 +40,7 @@ class CommonButton extends StatefulWidget {
     this.border,
     this.animationDuration = const Duration(seconds: 1),
     this.buttonIcon,
+    this.buttonImageIcon,
     this.iconColor,
     this.textColor,
     this.pressedIconColor,
@@ -79,6 +81,8 @@ class _CommonButtonState extends State<CommonButton>
   double get _height => widget.height;
 
   Icon get _buttonIcon => widget.buttonIcon;
+
+  ImageIcon get _buttonImageIcon => widget.buttonImageIcon;
 
   String get _buttonText => widget.buttonText;
 
@@ -137,7 +141,6 @@ class _CommonButtonState extends State<CommonButton>
         key: _globalKey,
         onTap: () {
           setState(() {
-            print(_buttonState);
             _onTap();
             if (_loadingAnimation == true &&
                 _buttonState == ButtonState.INITIAL_STATE &&
@@ -223,7 +226,9 @@ class _CommonButtonState extends State<CommonButton>
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            (_buttonIcon != null) ? _getButtonIcon() : Container(),
+            (_buttonIcon != null || _buttonImageIcon != null)
+                ? _getButtonIcon()
+                : Container(),
             _getButtonText()
           ],
         ),
@@ -252,10 +257,16 @@ class _CommonButtonState extends State<CommonButton>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(
-              _buttonIcon.icon,
-              color: _actualIconColor,
-            ),
+            (_buttonIcon != null)
+                ? Icon(
+                    _buttonIcon.icon,
+                    color: _actualIconColor,
+                  )
+                : Image(
+                    image: AssetImage('images/logo.png'),
+                    width: 32,
+                    height: 32,
+                  ),
           ],
         ),
       );
@@ -265,7 +276,10 @@ class _CommonButtonState extends State<CommonButton>
           margin: EdgeInsets.only(right: 16, left: 16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment:
+                (_buttonIcon != null || _buttonImageIcon != null)
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
             children: [
               Text(_buttonText,
                   maxLines: _buttonMaxLines,
@@ -306,7 +320,6 @@ class _CommonButtonState extends State<CommonButton>
             setState(() {
               _borderRadiusForLoading = BorderRadius.circular(_height);
               _alreadyPressed = true;
-              print('Initial: $_buttonState');
             });
           }
         });
@@ -328,7 +341,6 @@ class _CommonButtonState extends State<CommonButton>
             setState(() {
               _borderRadiusForLoading = BorderRadius.circular(10);
               _alreadyPressed = false;
-              print('StartLoading $_buttonState');
             });
           }
         });
@@ -338,7 +350,7 @@ class _CommonButtonState extends State<CommonButton>
           _alreadyPressed == false) {
         _animationController.forward();
       }
-    } else{
+    } else {
       _borderRadiusForLoading = _borderRadius;
     }
   }

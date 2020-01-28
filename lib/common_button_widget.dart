@@ -28,6 +28,7 @@ class CommonButton extends StatefulWidget {
   final EdgeInsets buttonPadding;
   final ButtonState buttonState;
   final bool showOnlyCircleProgressBarOnClick;
+  final bool keepPressed;
 
   CommonButton({
     @required this.onTap,
@@ -53,6 +54,7 @@ class CommonButton extends StatefulWidget {
     this.buttonPadding,
     this.buttonMaxLines = 1,
     this.loadingColor,
+    this.keepPressed = false,
     this.showOnlyCircleProgressBarOnClick = false,
     this.buttonState = ButtonState.INITIAL_STATE,
   });
@@ -72,6 +74,8 @@ class _CommonButtonState extends State<CommonButton>
   BorderRadius get _borderRadius => widget.borderRadius;
 
   bool get _loadingAnimation => widget.loadingAnimation;
+
+  bool get _keepPressed => widget.keepPressed;
 
   bool get _showOnlyCircleProgressBarOnClick =>
       widget.showOnlyCircleProgressBarOnClick;
@@ -125,6 +129,7 @@ class _CommonButtonState extends State<CommonButton>
   Color _actualIconColor;
   Color _actualTextColor;
   bool _alreadyPressed;
+  bool _changeColorOnTap;
 
   GlobalKey _globalKey = GlobalKey();
 
@@ -135,6 +140,7 @@ class _CommonButtonState extends State<CommonButton>
     _actualIconColor = _iconColor != null ? _iconColor : Colors.black;
     _actualTextColor = _textColor != null ? _textColor : Colors.black;
     _alreadyPressed = false;
+    _changeColorOnTap = false;
     super.initState();
   }
 
@@ -146,6 +152,10 @@ class _CommonButtonState extends State<CommonButton>
         onTap: () {
           setState(() {
             _onTap();
+            if (_keepPressed == true) {
+              _changeColorOnTap = !_changeColorOnTap;
+              _updateColors(_changeColorOnTap);
+            }
             if (_loadingAnimation == true &&
                 _buttonState == ButtonState.INITIAL_STATE &&
                 _showOnlyCircleProgressBarOnClick == false)

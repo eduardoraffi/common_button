@@ -163,38 +163,38 @@ class _CommonButtonState extends State<CommonButton>
           });
         },
         onTapDown: (details) {
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(true);
             });
         },
         onTapUp: (details) {
           _onTap;
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(false);
             });
         },
         onVerticalDragStart: (DragStartDetails details) {
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(true);
             });
         },
         onHorizontalDragStart: (DragStartDetails details) {
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(true);
             });
         },
         onVerticalDragEnd: (DragEndDetails details) {
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(false);
             });
         },
         onHorizontalDragEnd: (DragEndDetails details) {
-          if (_pressedButtonColor != null)
+          if (_pressedButtonColor != null && !_keepPressed)
             setState(() {
               _updateColors(false);
             });

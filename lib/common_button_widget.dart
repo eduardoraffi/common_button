@@ -29,6 +29,7 @@ class CommonButton extends StatefulWidget {
   final ButtonState buttonState;
   final bool showOnlyCircleProgressBarOnClick;
   final bool keepPressed;
+  final bool buttonInsideListview;
 
   CommonButton({
     @required this.onTap,
@@ -57,6 +58,7 @@ class CommonButton extends StatefulWidget {
     this.keepPressed = false,
     this.showOnlyCircleProgressBarOnClick = false,
     this.buttonState = ButtonState.INITIAL_STATE,
+    this.buttonInsideListview = false,
   });
 
   @override
@@ -76,6 +78,8 @@ class _CommonButtonState extends State<CommonButton>
   bool get _loadingAnimation => widget.loadingAnimation;
 
   bool get _keepPressed => widget.keepPressed;
+
+  bool get _buttonInsideListview => widget.buttonInsideListview;
 
   bool get _showOnlyCircleProgressBarOnClick =>
       widget.showOnlyCircleProgressBarOnClick;
@@ -147,7 +151,9 @@ class _CommonButtonState extends State<CommonButton>
   @override
   Widget build(BuildContext context) {
     _handleAnimations();
-    return GestureDetector(
+    return (_buttonInsideListview)
+        ? _temporaryDragIssuesFix()
+        : GestureDetector(
         key: _globalKey,
         onTap: () {
           setState(() {
@@ -175,45 +181,68 @@ class _CommonButtonState extends State<CommonButton>
               _updateColors(false);
             });
         },
-        onVerticalDragStart: (DragStartDetails details) {
-          if (_pressedButtonColor != null && !_keepPressed)
+        onVerticalDragStart: (_) {
+          if (_pressedButtonColor != null && !_keepPressed) {
             setState(() {
               _updateColors(true);
             });
+          }
         },
-        onHorizontalDragStart: (DragStartDetails details) {
-          if (_pressedButtonColor != null && !_keepPressed)
+        onHorizontalDragStart: (_) {
+          if (_pressedButtonColor != null && !_keepPressed) {
             setState(() {
               _updateColors(true);
             });
+          }
         },
-        onVerticalDragEnd: (DragEndDetails details) {
-          if (_pressedButtonColor != null && !_keepPressed)
+        onVerticalDragEnd: (_) {
+          if (_pressedButtonColor != null && !_keepPressed) {
             setState(() {
               _updateColors(false);
             });
+          }
         },
-        onHorizontalDragEnd: (DragEndDetails details) {
-          if (_pressedButtonColor != null && !_keepPressed)
+        onHorizontalDragEnd: (_) {
+          if (_pressedButtonColor != null && !_keepPressed) {
             setState(() {
               _updateColors(false);
             });
+          }
         },
-        child: Container(
-          padding: (_buttonPadding != null) ? _buttonPadding : null,
-          decoration: (_buttonState == ButtonState.START_LOADING_STATE)
-              ? _setBoxDecorationForLoadingView()
-              : _setBoxDecoration(),
-          height: _height,
-          width: (_showOnlyCircleProgressBarOnClick == false)
-              ? _progressWidth
-              : double.infinity,
-          child: (_buttonState == ButtonState.INITIAL_STATE ||
-                  _buttonState == ButtonState.END_LOADING_STATE)
-              ? _setButtonContent()
-              : _loadingView(),
-        ));
+        child: _getButtonContainer());
   }
+
+  _temporaryDragIssuesFix() => GestureDetector(
+      key: _globalKey,
+      onTap: () {
+        setState(() {
+          _onTap();
+          if (_keepPressed == true) {
+            _changeColorOnTap = !_changeColorOnTap;
+            _updateColors(_changeColorOnTap);
+          }
+          if (_loadingAnimation == true &&
+              _buttonState == ButtonState.INITIAL_STATE &&
+              _showOnlyCircleProgressBarOnClick == false)
+            _animationController.forward();
+        });
+      },
+      child: _getButtonContainer());
+
+  _getButtonContainer() => Container(
+    padding: (_buttonPadding != null) ? _buttonPadding : null,
+    decoration: (_buttonState == ButtonState.START_LOADING_STATE)
+        ? _setBoxDecorationForLoadingView()
+        : _setBoxDecoration(),
+    height: _height,
+    width: (_showOnlyCircleProgressBarOnClick == false)
+        ? _progressWidth
+        : double.infinity,
+    child: (_buttonState == ButtonState.INITIAL_STATE ||
+        _buttonState == ButtonState.END_LOADING_STATE)
+        ? _setButtonContent()
+        : _loadingView(),
+  );
 
   _updateColors(bool pressed) {
     if (!pressed) {
@@ -234,30 +263,30 @@ class _CommonButtonState extends State<CommonButton>
       color: _actualButtonColor);
 
   _setButtonContent() => AnimatedContainer(
-        duration: _animationDuration,
-        width: MediaQuery.of(context).size.width,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            (_buttonIcon != null || _buttonImageAsset != null)
-                ? _getButtonIcon()
-                : Container(),
-            _getButtonText()
-          ],
-        ),
-      );
+    duration: _animationDuration,
+    width: MediaQuery.of(context).size.width,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        (_buttonIcon != null || _buttonImageAsset != null)
+            ? _getButtonIcon()
+            : Container(),
+        _getButtonText()
+      ],
+    ),
+  );
 
   _loadingView() => Container(
-        padding: EdgeInsets.all(8),
-        height: _height,
-        width: _height,
-        child: Center(
-            child: CircularProgressIndicator(
+    padding: EdgeInsets.all(8),
+    height: _height,
+    width: _height,
+    child: Center(
+        child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(
               (_loadingColor != null) ? _loadingColor : Colors.blue),
         )),
-      );
+  );
 
   _setBoxDecorationForLoadingView() => BoxDecoration(
       border: _border,
@@ -266,54 +295,54 @@ class _CommonButtonState extends State<CommonButton>
       borderRadius: _borderRadiusForLoading);
 
   _getButtonIcon() => Container(
-        margin: EdgeInsets.only(left: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            (_buttonIcon != null)
-                ? Icon(
-                    _buttonIcon.icon,
-                    color: _actualIconColor,
-                    size: _iconSize,
-                  )
-                : ImageIcon(
-                    _buttonImageAsset,
-                    color: _actualIconColor,
-                    size: _iconSize,
-                  )
-          ],
-        ),
-      );
+    margin: EdgeInsets.only(left: 16),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        (_buttonIcon != null)
+            ? Icon(
+          _buttonIcon.icon,
+          color: _actualIconColor,
+          size: _iconSize,
+        )
+            : ImageIcon(
+          _buttonImageAsset,
+          color: _actualIconColor,
+          size: _iconSize,
+        )
+      ],
+    ),
+  );
 
   _getButtonText() => Expanded(
-        child: Container(
-          margin: EdgeInsets.only(right: 16, left: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment:
-                (_buttonIcon != null || _buttonImageAsset != null)
-                    ? CrossAxisAlignment.start
-                    : CrossAxisAlignment.center,
-            children: [
-              Text(_buttonText,
-                  maxLines: _buttonMaxLines,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: _actualTextColor,
-                      fontWeight: (_buttonTextFontWeight != null)
-                          ? _buttonTextFontWeight
-                          : null,
-                      fontStyle: (_buttonTextFontStyle != null)
-                          ? _buttonTextFontStyle
-                          : null,
-                      fontSize: (_buttonTextFontSize != null)
-                          ? _buttonTextFontSize
-                          : null))
-            ],
-          ),
-        ),
-      );
+    child: Container(
+      margin: EdgeInsets.only(right: 16, left: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment:
+        (_buttonIcon != null || _buttonImageAsset != null)
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
+        children: [
+          Text(_buttonText,
+              maxLines: _buttonMaxLines,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  color: _actualTextColor,
+                  fontWeight: (_buttonTextFontWeight != null)
+                      ? _buttonTextFontWeight
+                      : null,
+                  fontStyle: (_buttonTextFontStyle != null)
+                      ? _buttonTextFontStyle
+                      : null,
+                  fontSize: (_buttonTextFontSize != null)
+                      ? _buttonTextFontSize
+                      : null))
+        ],
+      ),
+    ),
+  );
 
   void _handleAnimations() {
     if (!_showOnlyCircleProgressBarOnClick) {
